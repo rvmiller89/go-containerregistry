@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/crane"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/cache"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/spf13/cobra"
 )
 
@@ -68,5 +69,26 @@ func NewCmdPull(options *[]crane.Option) *cobra.Command {
 	cmd.Flags().StringVarP(&cachePath, "cache_path", "c", "", "Path to cache image layers")
 	cmd.Flags().StringVar(&format, "format", "tarball", fmt.Sprintf("Format in which to save images (%q, %q, or %q)", "tarball", "legacy", "oci"))
 
+	return cmd
+}
+
+// NewCmdPullIndex creates a new cobra.Command for the pull-index subcommand.
+func NewCmdPullIndex(options *[]crane.Option) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pull-index INDEX OCI-LAYOUT",
+		Short: "Pull-index pulls remote index by reference and store its contents in the oci image layout",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(_ *cobra.Command, args []string) error {
+			tag, path := args[0], args[1]
+			index, err := crane.PullIndex(tag, *options...)
+			if err != nil {
+				return fmt.Errorf("pulling %s: %v", path, err)
+			}
+			if _, err = layout.Write(path, index); err != nil {
+				return fmt.Errorf("saving oci image layout %s: %v", path, err)
+			}
+			return nil
+		},
+	}
 	return cmd
 }

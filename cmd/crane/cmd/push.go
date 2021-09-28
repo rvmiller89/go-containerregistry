@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,24 @@ func NewCmdPush(options *[]crane.Option) *cobra.Command {
 			}
 
 			return crane.Push(img, tag, *options...)
+		},
+	}
+}
+
+// NewCmdPushIndex creates a new cobra.Command for the push-index subcommand.
+func NewCmdPushIndex(options *[]crane.Option) *cobra.Command {
+	return &cobra.Command{
+		Use:   "push-index OCI-LAYOUT INDEX",
+		Short: "Push image index and contents to a remote registry",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(_ *cobra.Command, args []string) error {
+			path, tag := args[0], args[1]
+			index, err := layout.ImageIndexFromPath(path)
+			if err != nil {
+				return fmt.Errorf("loading %s as tarball: %v", path, err)
+			}
+
+			return crane.PushIndex(index, tag, *options...)
 		},
 	}
 }

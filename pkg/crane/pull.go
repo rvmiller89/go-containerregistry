@@ -43,6 +43,17 @@ func Pull(src string, opt ...Option) (v1.Image, error) {
 	return remote.Image(ref, o.Remote...)
 }
 
+// PullIndex returns a v1.ImageIndex of the remote image index src.
+func PullIndex(src string, opt ...Option) (v1.ImageIndex, error) {
+	o := makeOptions(opt...)
+	ref, err := name.ParseReference(src, o.Name...)
+	if err != nil {
+		return nil, fmt.Errorf("parsing reference %q: %v", src, err)
+	}
+
+	return remote.Index(ref, o.Remote...)
+}
+
 // Save writes the v1.Image img as a tarball at path with tag src.
 func Save(img v1.Image, src, path string) error {
 	imgMap := map[string]v1.Image{src: img}
